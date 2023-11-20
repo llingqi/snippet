@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"moliang.net/snippetbox/internal/models"
+	"time"
 )
 
 type UserModel struct{}
@@ -30,4 +31,15 @@ func (m *UserModel) Exists(id int) (bool, error) {
 	default:
 		return false, nil
 	}
+}
+func (m *UserModel) Get(id int) (*models.User, error) {
+	if id == 1 {
+		return &models.User{
+			ID:      1,
+			Name:    "zhangsan",
+			Email:   "192168279@qq.com",
+			Created: time.Time{},
+		}, nil
+	}
+	return nil, models.ErrNoRecord
 }

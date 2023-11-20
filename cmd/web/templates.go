@@ -19,10 +19,11 @@ type templateData struct {
 	CurrentYear     int
 	Snippet         *models.Snippet
 	Snippets        []*models.Snippet
-	Form            any    // 渲染html表单数据
-	Flash           string // Add a Flash field to the templateData struct.
-	IsAuthenticated bool   // Add an IsAuthenticated field to the templateData struct.
-	CSRFToken       string // Add a CSRFToken field.
+	Form            any          // 渲染html表单数据
+	Flash           string       // Add a Flash field to the templateData struct.
+	IsAuthenticated bool         // Add an IsAuthenticated field to the templateData struct.
+	CSRFToken       string       // Add a CSRFToken field.
+	User            *models.User //用户信息
 }
 
 // Create a humanDate function which returns a nicely formatted string

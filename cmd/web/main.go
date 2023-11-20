@@ -21,6 +21,7 @@ import (
 // we'll add more to it as the build progresses.
 // Add a templateCache field to the application struct.
 type application struct {
+	debug          bool //debug模式
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	snippets       models.SnippetModelInterface // Use our new interface type.
@@ -39,6 +40,9 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	// Define a new command-line flag for the MySQL DSN string.
 	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
+
+	debug := flag.Bool("debug", false, "Enable debug mode")
+
 	flag.Parse()
 	// Use log.New() to create a logger for writing information messages. This takes
 	// three parameters: the destination to write the logs to (os.Stdout), a string
@@ -93,6 +97,7 @@ func main() {
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
+		debug:          *debug,
 	}
 
 	// Initialize a tls.Config struct to hold the non-default TLS settings we
