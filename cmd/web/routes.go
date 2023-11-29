@@ -89,6 +89,10 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/about", dynamic.ThenFunc(app.about))
 	router.Handler(http.MethodGet, "/account/view", dynamic.ThenFunc(app.accountView))
 
+	// 添加路由更新用户密码
+	router.Handler(http.MethodGet, "/account/password/update", dynamic.ThenFunc(app.accountPasswordUpdate))
+	router.Handler(http.MethodPost, "/account/password/update", dynamic.ThenFunc(app.accountPasswordUpdatePost))
+
 	// Protected (authenticated-only) application routes, using a new "protected"
 	// middleware chain which includes the requireAuthentication middleware.
 	// Because the 'protected' middleware chain appends to the 'dynamic' chain

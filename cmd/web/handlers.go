@@ -42,6 +42,13 @@ type userLoginForm struct {
 	validator.Validator `form:"-"`
 }
 
+type accountPasswordUpdateForm struct {
+	CurrentPassword         string `form:"currentPassword"`
+	NewPassword             string `form:"newPassword"`
+	NewPasswordConfirmation string `form:"newPasswordConfirmation"`
+	validator.Validator     `form:"-"`
+}
+
 // Change the signature of the home handler, so it is defined as a method against
 // *application.
 // 定义一个handle函数home，将[]byte数据写入到响应体中作为respond.body
@@ -202,7 +209,7 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	// Declare an zero-valued instance of our userSignupForm struct.
+	// Declare a zero-valued instance of our userSignupForm struct.
 	var form userSignupForm
 
 	// Parse the form data into the userSignupForm struct.
@@ -314,8 +321,16 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	// 'logged in'.
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
 
-	// Redirect the user to the create snippet page.
-	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+	//判断是否存在重定向
+	path := app.sessionManager.PopString(r.Context(), "redirectPathAfterLogin")
+	//如果存在登录前访问页面则登录到登录之前的页面
+	if path != "" {
+		http.Redirect(w, r, path, http.StatusSeeOther)
+	} else {
+		// Redirect the user to the create snippet page.
+		http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+	}
+
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
@@ -343,10 +358,13 @@ func ping(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK")) //写入的是body中的内容
 }
 
+// 访问about页面，查看网站信息描述
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	tmp := app.newTemplateData(r)
 	app.render(w, http.StatusOK, "about", tmp)
 }
+
+// 登录用户查看自己的账户信息：昵称、邮件地址和注册账户时间
 func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
@@ -365,4 +383,28 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 
 	app.render(w, http.StatusOK, "account.tmpl", data)
 	//fmt.Fprintf(w, "%+v", user)
+}
+
+// 给用户发送渲染逻辑
+func (app *application) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = accountPasswordUpdateForm{}
+
+	app.render(w, http.StatusOK, "password.tmpl", data)
+}
+
+func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
+	//todo 执行更新逻辑 获取表单数据，校验错误，无错更新密码
+	var form accountPasswordUpdateForm
+	err := app.decodePostForm(r,&form)
+	if err != nil{
+		app.serverError(w,err)
+	}
+
+	form.CheckField(validator.NotBlank(form.CurrentPassword),"CurrentPassword","This field cannot be blank")
+	//form.CheckField(validator.MaxChars())
+	解析表单数据
+	校验表单字段
+	如果成功再执行更新逻辑
+	更新完库之后 renewsession token（不用更新
 }

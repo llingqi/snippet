@@ -71,6 +71,7 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	buf.WriteTo(w)
 }
 
+// 模板数据，用于渲染模板
 // Create an newTemplateData() helper, which returns a pointer to a templateData
 // struct initialized with the current year. Note that we're not using the
 // *http.Request parameter here at the moment, but we will do later in the book.
@@ -81,7 +82,6 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		// Add the authentication status to the template data.
 		IsAuthenticated: app.isAuthenticated(r),
 		CSRFToken:       nosurf.Token(r), // Add the CSRF token.
-
 	}
 }
 

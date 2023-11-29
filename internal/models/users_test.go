@@ -11,7 +11,6 @@ func TestUserModelExists(t *testing.T) {
 	if testing.Short() {
 		t.Skip("models: skipping integration test")
 	}
-	
 	// Set up a suite of table-driven tests and expected results.
 	tests := []struct {
 		name   string

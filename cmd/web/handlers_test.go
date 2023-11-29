@@ -205,7 +205,7 @@ func TestUserSignup(t *testing.T) {
 func TestSnippetCreate(t *testing.T) {
 	app := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
-	defer ts.Close()
+	defer ts.Close() //确保在测试执行结束后，关闭测试服务器的运行。这样可以释放服务器使用的资源，确保测试环境的干净和资源的正确释放。
 
 	t.Run("Unauthenticated", func(t *testing.T) {
 		code, headers, _ := ts.get(t, "/snippet/create")
@@ -235,4 +235,5 @@ func TestSnippetCreate(t *testing.T) {
 		assert.Equal(t, code, http.StatusOK)
 		assert.StringContains(t, body, "<form action='/snippet/create' method='POST'>")
 	})
+
 }
