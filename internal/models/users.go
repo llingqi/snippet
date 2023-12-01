@@ -23,6 +23,7 @@ type UserModelInterface interface {
 	Authenticate(email, password string) (int, error)
 	Exists(id int) (bool, error)
 	Get(id int) (*User, error)
+	PasswordUpdate(id int, currentPassword, newPassword string) error
 }
 
 // Define a new UserModel type which wraps a database connection pool.
@@ -122,4 +123,37 @@ func (m *UserModel) Get(id int) (*User, error) {
 		}
 	}
 	return &user, nil
+}
+
+func (m *UserModel) PasswordUpdate(id int, currentPassword, newPassword string) error {
+	var currentHashedPassword []byte
+
+	// 根据ID从数据库检索
+	stmt := `SELECT hashed_password FROM snippet WHERE id = ?`
+
+	err := m.DB.QueryRow(stmt, id).Scan(&currentHashedPassword)
+	if err != nil {
+		return err
+	}
+
+	// 当前密码哈希值比较
+	err = bcrypt.CompareHashAndPassword(currentHashedPassword, []byte(currentPassword))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return ErrInvalidCredentials
+		}
+		return err
+	}
+	// 更新数据库密码哈希值
+	newHashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	if err != nil {
+		return err
+	}
+
+	// 插入数据库
+	stmt = `UPDATE users SET hashed_password = ? WHERE id = ?`
+
+	_, err = m.DB.Exec(stmt, string(newHashedPassword), id)
+
+	return err
 }

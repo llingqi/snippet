@@ -401,10 +401,21 @@ func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http
 		app.serverError(w,err)
 	}
 
-	form.CheckField(validator.NotBlank(form.CurrentPassword),"CurrentPassword","This field cannot be blank")
-	//form.CheckField(validator.MaxChars())
-	解析表单数据
-	校验表单字段
+	// 校验表单字段
+	form.CheckField(validator.NotBlank(form.CurrentPassword),"currentPassword","This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.NewPassword),"newPassword","This field cannot be blank")
+	form.CheckField(validator.MinChars(form.NewPassword,8),"newPassword","This field must be at least 8 characters long")
+	form.CheckField(validator.NotBlank(form.NewPasswordConfirmation),"newPasswordConfirmation","This field cannot be blank")
+	form.CheckField(validator.Equal(form.NewPassword,form.NewPasswordConfirmation),"newPasswordConfirmation","Password do not match")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+
+		app.render(w,http.StatusBadRequest,"password.tmpl",data)
+		return
+	}
+
 	如果成功再执行更新逻辑
 	更新完库之后 renewsession token（不用更新
 }
