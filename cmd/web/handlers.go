@@ -378,8 +378,12 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	flash := app.sessionManager.PopString(r.Context(), "flash")
+
 	data := app.newTemplateData(r)
 	data.User = user
+
+	data.Flash = flash
 
 	app.render(w, http.StatusOK, "account.tmpl", data)
 	//fmt.Fprintf(w, "%+v", user)
@@ -396,26 +400,42 @@ func (app *application) accountPasswordUpdate(w http.ResponseWriter, r *http.Req
 func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
 	//todo 执行更新逻辑 获取表单数据，校验错误，无错更新密码
 	var form accountPasswordUpdateForm
-	err := app.decodePostForm(r,&form)
-	if err != nil{
-		app.serverError(w,err)
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.serverError(w, err)
 	}
 
 	// 校验表单字段
-	form.CheckField(validator.NotBlank(form.CurrentPassword),"currentPassword","This field cannot be blank")
-	form.CheckField(validator.NotBlank(form.NewPassword),"newPassword","This field cannot be blank")
-	form.CheckField(validator.MinChars(form.NewPassword,8),"newPassword","This field must be at least 8 characters long")
-	form.CheckField(validator.NotBlank(form.NewPasswordConfirmation),"newPasswordConfirmation","This field cannot be blank")
-	form.CheckField(validator.Equal(form.NewPassword,form.NewPasswordConfirmation),"newPasswordConfirmation","Password do not match")
+	form.CheckField(validator.NotBlank(form.CurrentPassword), "currentPassword", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.NewPassword), "newPassword", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.NewPassword, 8), "newPassword", "This field must be at least 8 characters long")
+	form.CheckField(validator.NotBlank(form.NewPasswordConfirmation), "newPasswordConfirmation", "This field cannot be blank")
+	form.CheckField(form.NewPassword == form.NewPasswordConfirmation, "newPasswordConfirmation", "Password do not match")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
 
-		app.render(w,http.StatusBadRequest,"password.tmpl",data)
+		app.render(w, http.StatusBadRequest, "password.tmpl", data)
 		return
 	}
+	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	err = app.users.PasswordUpdate(id, form.CurrentPassword, form.NewPassword)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddFieldError("currentPassword", "Current Password is incorrect")
+			data := app.newTemplateData(r)
+			data.Form = form
 
-	如果成功再执行更新逻辑
-	更新完库之后 renewsession token（不用更新
+			app.render(w, http.StatusUnprocessableEntity, "password.tmpl", data)
+		} else {
+			//form.AddNonFieldError(err.Error()) //nonfield什么时候用？
+			app.serverError(w, err)
+		}
+
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Your password has been updated!")
+
+	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
