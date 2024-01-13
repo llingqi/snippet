@@ -25,6 +25,6 @@ func NilError(t *testing.T, actual error) {
 	t.Helper()
 
 	if actual != nil {
-		t.Error("got: %v; exprcted:nil", actual)
+		t.Errorf("got: %v; expected:nil", actual)
 	}
 }

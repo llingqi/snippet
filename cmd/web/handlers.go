@@ -361,7 +361,7 @@ func ping(w http.ResponseWriter, r *http.Request) {
 // 访问about页面，查看网站信息描述
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	tmp := app.newTemplateData(r)
-	app.render(w, http.StatusOK, "about", tmp)
+	app.render(w, http.StatusOK, "about.tmpl", tmp)
 }
 
 // 登录用户查看自己的账户信息：昵称、邮件地址和注册账户时间
